@@ -1,0 +1,53 @@
+>  # Data Wrangling project
+>  # Imported refine_original dataset in xlsx into working directory
+
+>  # Install necessary libraries
+
+> library(readr)
+> library(dplyr)
+> library(tidyr)
+> library(tibble)
+
+> #  Create Dataframe from dataset in xlsx format
+
+toy <- data.frame(read_excel("refine_original.xlsx", sheet = 1, col_names = TRUE))
+
+> #  Clean column 1 for spelling errors, case changes and standardize
+
+> toy$company <- gsub("ph.*|fi.*", "Philips", toy$company, ignore.case = TRUE)
+> toy$company <- gsub("ak.*", "Akzo", toy$company, ignore.case = TRUE)
+> toy$company <- gsub("va.*", "Van Houten", toy$company, ignore.case = TRUE)
+> toy$company <- gsub("un.*", "Unilever", toy$company, ignore.case = TRUE)
+
+> #  Replace column 2 by splitting values into 2 different columns with - as separator 
+
+> separate(toy, Product.code...number., c("Product code", "Product number"), sep = "-", remove = TRUE)
+
+> #  Assign values in a new column based on character match in column 2
+
+> toy [toy$`Product code`== "p", `Product Category`] <- "Smartphone"
+> toy[toy$`Product code`== "v", `Product Category`] <- "TV"
+> toy[toy$`Product code`== "x", `Product Category`] <- "Laptop"
+> toy[toy$`Product code`== "q", `Product Category`] <- "Tablet"
+
+> #  Rename the new column
+> colnames(toy)[8] <- "Product Category"
+
+> #  Create another column by combining values in 3 different columns
+> transform(toy, `full address` = paste(address,city,country, sep = ","))
+
+> #  Create Binary columns(Dummy variables) for Regression analysis
+
+> toy <- mutate(toy, company_philips = ifelse(as.character(toy$company) == "Philips", 1, 0))
+> toy <- mutate(toy, company_akzo = ifelse(as.character(toy$company) == "Akzo", 1, 0))
+> toy <- mutate(toy, company_van_houten = ifelse(as.character(toy$company) == "Van Houten", 1, 0))
+> toy <- mutate(toy, company_unilever = ifelse(as.character(toy$company) == "Unilever", 1, 0))
+
+> toy <- mutate(toy, product_smartphone = ifelse(as.character(toy$`Product Category`) == "Smartphone", 1, 0))
+> toy <- mutate(toy, product_tv = ifelse(as.character(toy$`Product Category`) == "TV", 1, 0))
+> toy <- mutate(toy, product_laptop = ifelse(as.character(toy$`Product Category`) == "Laptop", 1, 0))
+> toy <- mutate(toy, product_tablet = ifelse(as.character(toy$`Product Category`) == "Tablet", 1, 0))
+> toy
+
+> #  Create cleaned dataset in csv format
+> write.csv(toy, file = "refine_clean.csv")
